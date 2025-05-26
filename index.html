@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predicción de Causa de Defunción</title>
+    <style>
+        /* ... tu CSS ... */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Predicción de Causa de Defunción</h1>
+
+        <form id="predictionForm">
+            <p>Introduce los datos del paciente para predecir la causa de defunción más probable.</p>
+
+            <label for="Depreg">Departamento de Registro:</label>
+            <input type="number" id="Depreg" name="Depreg" value="1" required>
+
+            <label for="Mupreg">Municipio de Registro:</label>
+            <input type="number" id="Mupreg" name="Mupreg" value="101" required>
+
+            <label for="Depocu">Departamento de Ocurrencia:</label>
+            <input type="number" id="Depocu" name="Depocu" value="1" required>
+
+            <label for="Mupocu">Municipio de Ocurrencia:</label>
+            <input type="number" id="Mupocu" name="Mupocu" value="101" required>
+
+            <label for="Areag">Área Geográfica (1=Urbana, 2=Rural):</label>
+            <input type="number" id="Areag" name="Areag" value="1" required>
+
+            <label for="Sexo">Sexo (1=Hombre, 2=Mujer):</label>
+            <select id="Sexo" name="Sexo" required>
+                <option value="1">Hombre</option>
+                <option value="2">Mujer</option>
+            </select>
+
+            <label for="Edadif">Edad del Fallecido:</label>
+            <input type="number" id="Edadif" name="Edadif" value="60" required>
+
+            <label for="Perdif">Período de Edad del Fallecido (Según diccionario):</label>
+            <input type="number" id="Perdif" name="Perdif" value="3" required> <label for="Getdif">Grupo Étnico (Según diccionario):</label>
+            <input type="number" id="Getdif" name="Getdif" value="1" required> <label for="Ecidif">Estado Civil (Según diccionario):</label>
+            <input type="number" id="Ecidif" name="Ecidif" value="1" required> <label for="Escodif">Escolaridad (Según diccionario - 99=No aplica/ignorado):</label>
+            <input type="number" id="Escodif" name="Escodif" value="3" required> <label for="Ocudif">Ocupación (Según diccionario - 999=No aplica/ignorado):</label>
+            <input type="number" id="Ocudif" name="Ocudif" value="999" required>
+
+            <label for="Pnadif">País de Nacimiento (Según diccionario - 99=No aplica/ignorado):</label>
+            <input type="number" id="Pnadif" name="Pnadif" value="84" required> <label for="Dnadif">Departamento de Nacimiento (Según diccionario):</label>
+            <input type="number" id="Dnadif" name="Dnadif" value="23" required> <label for="Mnadif">Municipio de Nacimiento (Según diccionario):</label>
+            <input type="number" id="Mnadif" name="Mnadif" value="2300" required> <label for="Nacdif">Nacionalidad (Según diccionario):</label>
+            <input type="number" id="Nacdif" name="Nacdif" value="84" required> <label for="Predif">País de Residencia (Según diccionario - 99=No aplica/ignorado):</label>
+            <input type="number" id="Predif" name="Predif" value="84" required>
+
+            <label for="Dredif">Departamento de Residencia (Según diccionario):</label>
+            <input type="number" id="Dredif" name="Dredif" value="23" required>
+
+            <label for="Mredif">Municipio de Residencia (Según diccionario):</label>
+            <input type="number" id="Mredif" name="Mredif" value="2300" required>
+
+            <label for="Asist">Asistencia Médica (Según diccionario):</label>
+            <input type="number" id="Asist" name="Asist" value="1" required> <label for="Ocur">Lugar de Ocurrencia (Según diccionario):</label>
+            <input type="number" id="Ocur" name="Ocur" value="1" required> <label for="Cerdef">Certificador de Defunción (Según diccionario - 99=No aplica/ignorado):</label>
+            <input type="number" id="Cerdef" name="Cerdef" value="1" required> <label for="Añoocu">Año de Ocurrencia:</label>
+            <input type="number" id="Añoocu" name="Añoocu" value="2012" required>
+
+            <button type="submit">Predecir Causa de Defunción</button>
+        </form>
+
+        <div id="result"></div>
+        <div id="error" class="error"></div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            resultDiv.innerText = 'Cargando...';
+            errorDiv.innerText = '';
+
+            const formData = new FormData(event.target);
+            const data = {};
+            for (const [key, value] of formData.entries()) {
+                // Intenta convertir a float. Si no es un número válido (ej. select vacío), lo deja como está
+                const parsedValue = parseFloat(value);
+                data[key] = isNaN(parsedValue) ? value : parsedValue;
+            }
+
+            const expectedColumns = [
+                'Depreg', 'Mupreg', 'Depocu', 'Mupocu', 'Areag', 'Sexo', 'Edadif',
+                'Perdif', 'Getdif', 'Ecidif', 'Escodif', 'Ocudif', 'Pnadif', 'Dnadif',
+                'Mnadif', 'Nacdif', 'Predif', 'Dredif', 'Mredif', 'Asist', 'Ocur', 'Cerdef', 'Añoocu'
+            ];
+
+            // Este bucle asegura que todas las columnas esperadas estén presentes,
+            // si no están en el formulario, se añaden con 0 o un valor por defecto sensato.
+            // Aunque con `required` en HTML no debería ser necesario para los campos presentes.
+            for (const col of expectedColumns) {
+                if (!(col in data)) {
+                    data[col] = 0; // O un valor predeterminado si es mejor para la imputación de tu modelo
+                }
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                resultDiv.innerHTML = `
+                    <p><strong>Enfermedad Predicha:</strong> ${result.enfermedad_predicha}</p>
+                    <p><strong>Probabilidades:</strong></p>
+                    <pre>${JSON.stringify(result.probabilidades, null, 2)}</pre>
+                `;
+
+            } catch (e) {
+                errorDiv.innerText = `Error al obtener la predicción: ${e.message}`;
+                resultDiv.innerText = '';
+            }
+        });
+    </script>
+</body>
+</html>
