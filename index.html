@@ -4,67 +4,233 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Predicción de Causa de Defunción</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* ... tu CSS ... */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Un gris azulado suave */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px; /* Esquinas más redondeadas */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Sombra más pronunciada */
+            max-width: 800px; /* Ancho máximo para mejor legibilidad */
+            width: 100%;
+            border: 1px solid #e2e8f0; /* Borde sutil */
+        }
+        h1 {
+            text-align: center;
+            color: #2d3748; /* Un gris oscuro para el título */
+            font-size: 2.25rem; /* Tamaño de fuente más grande */
+            font-weight: 700; /* Negrita */
+            margin-bottom: 25px;
+        }
+        p {
+            text-align: center;
+            color: #4a5568; /* Gris medio para el texto */
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600; /* Semi-negrita */
+            color: #2d3748;
+            font-size: 0.95rem;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 18px;
+            border: 1px solid #cbd5e0; /* Borde más claro */
+            border-radius: 8px; /* Redondeado */
+            box-sizing: border-box;
+            font-size: 1rem;
+            color: #4a5568;
+            transition: border-color 0.2s;
+        }
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #63b3ed; /* Borde azul al enfocar */
+            box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.3); /* Sombra de enfoque */
+        }
+        button {
+            background-color: #4299e1; /* Azul vibrante */
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 700;
+            width: 100%;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(66, 153, 225, 0.3); /* Sombra para el botón */
+        }
+        button:hover {
+            background-color: #3182ce; /* Azul más oscuro al pasar el ratón */
+            transform: translateY(-2px); /* Efecto de elevación */
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        #result, #error {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            white-space: pre-wrap; /* Para mantener el formato del JSON */
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); /* Sombra interna */
+        }
+        #result {
+            background-color: #e6fffa; /* Verde claro para éxito */
+            border: 1px solid #81e6d9;
+            color: #234e52;
+        }
+        #error {
+            background-color: #fff5f5; /* Rojo claro para error */
+            border: 1px solid #feb2b2;
+            color: #c53030;
+            font-weight: bold;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4299e1;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none; /* Oculto por defecto */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Grid para el formulario en pantallas grandes */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem; /* Espacio entre columnas y filas */
+        }
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr; /* Una columna en móviles */
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Predicción de Causa de Defunción</h1>
+        <p>Introduce los datos del paciente para predecir la causa de defunción más probable entre Infarto agudo del miocardio (I219), Neumonía (J189) y Diabetes mellitus (E149).</p>
 
         <form id="predictionForm">
-            <p>Introduce los datos del paciente para predecir la causa de defunción más probable.</p>
-
-            <label for="Depreg">Departamento de Registro:</label>
-            <input type="number" id="Depreg" name="Depreg" value="1" required>
-
-            <label for="Mupreg">Municipio de Registro:</label>
-            <input type="number" id="Mupreg" name="Mupreg" value="101" required>
-
-            <label for="Depocu">Departamento de Ocurrencia:</label>
-            <input type="number" id="Depocu" name="Depocu" value="1" required>
-
-            <label for="Mupocu">Municipio de Ocurrencia:</label>
-            <input type="number" id="Mupocu" name="Mupocu" value="101" required>
-
-            <label for="Areag">Área Geográfica (1=Urbana, 2=Rural):</label>
-            <input type="number" id="Areag" name="Areag" value="1" required>
-
-            <label for="Sexo">Sexo (1=Hombre, 2=Mujer):</label>
-            <select id="Sexo" name="Sexo" required>
-                <option value="1">Hombre</option>
-                <option value="2">Mujer</option>
-            </select>
-
-            <label for="Edadif">Edad del Fallecido:</label>
-            <input type="number" id="Edadif" name="Edadif" value="60" required>
-
-            <label for="Perdif">Período de Edad del Fallecido (Según diccionario):</label>
-            <input type="number" id="Perdif" name="Perdif" value="3" required> <label for="Getdif">Grupo Étnico (Según diccionario):</label>
-            <input type="number" id="Getdif" name="Getdif" value="1" required> <label for="Ecidif">Estado Civil (Según diccionario):</label>
-            <input type="number" id="Ecidif" name="Ecidif" value="1" required> <label for="Escodif">Escolaridad (Según diccionario - 99=No aplica/ignorado):</label>
-            <input type="number" id="Escodif" name="Escodif" value="3" required> <label for="Ocudif">Ocupación (Según diccionario - 999=No aplica/ignorado):</label>
-            <input type="number" id="Ocudif" name="Ocudif" value="999" required>
-
-            <label for="Pnadif">País de Nacimiento (Según diccionario - 99=No aplica/ignorado):</label>
-            <input type="number" id="Pnadif" name="Pnadif" value="84" required> <label for="Dnadif">Departamento de Nacimiento (Según diccionario):</label>
-            <input type="number" id="Dnadif" name="Dnadif" value="23" required> <label for="Mnadif">Municipio de Nacimiento (Según diccionario):</label>
-            <input type="number" id="Mnadif" name="Mnadif" value="2300" required> <label for="Nacdif">Nacionalidad (Según diccionario):</label>
-            <input type="number" id="Nacdif" name="Nacdif" value="84" required> <label for="Predif">País de Residencia (Según diccionario - 99=No aplica/ignorado):</label>
-            <input type="number" id="Predif" name="Predif" value="84" required>
-
-            <label for="Dredif">Departamento de Residencia (Según diccionario):</label>
-            <input type="number" id="Dredif" name="Dredif" value="23" required>
-
-            <label for="Mredif">Municipio de Residencia (Según diccionario):</label>
-            <input type="number" id="Mredif" name="Mredif" value="2300" required>
-
-            <label for="Asist">Asistencia Médica (Según diccionario):</label>
-            <input type="number" id="Asist" name="Asist" value="1" required> <label for="Ocur">Lugar de Ocurrencia (Según diccionario):</label>
-            <input type="number" id="Ocur" name="Ocur" value="1" required> <label for="Cerdef">Certificador de Defunción (Según diccionario - 99=No aplica/ignorado):</label>
-            <input type="number" id="Cerdef" name="Cerdef" value="1" required> <label for="Añoocu">Año de Ocurrencia:</label>
-            <input type="number" id="Añoocu" name="Añoocu" value="2012" required>
-
+            <div class="form-grid">
+                <div>
+                    <label for="Depreg">Departamento de Registro:</label>
+                    <input type="number" id="Depreg" name="Depreg" value="1" required>
+                </div>
+                <div>
+                    <label for="Mupreg">Municipio de Registro:</label>
+                    <input type="number" id="Mupreg" name="Mupreg" value="101" required>
+                </div>
+                <div>
+                    <label for="Depocu">Departamento de Ocurrencia:</label>
+                    <input type="number" id="Depocu" name="Depocu" value="1" required>
+                </div>
+                <div>
+                    <label for="Mupocu">Municipio de Ocurrencia:</label>
+                    <input type="number" id="Mupocu" name="Mupocu" value="101" required>
+                </div>
+                <div>
+                    <label for="Areag">Área Geográfica (1=Urbana, 2=Rural):</label>
+                    <input type="number" id="Areag" name="Areag" value="1" required>
+                </div>
+                <div>
+                    <label for="Sexo">Sexo (1=Hombre, 2=Mujer):</label>
+                    <select id="Sexo" name="Sexo" required>
+                        <option value="1">Hombre</option>
+                        <option value="2">Mujer</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="Edadif">Edad del Fallecido:</label>
+                    <input type="number" id="Edadif" name="Edadif" value="60" required>
+                </div>
+                <div>
+                    <label for="Perdif">Período de Edad (Según diccionario):</label>
+                    <input type="number" id="Perdif" name="Perdif" value="3" required>
+                </div>
+                <div>
+                    <label for="Getdif">Grupo Étnico (Según diccionario):</label>
+                    <input type="number" id="Getdif" name="Getdif" value="1" required>
+                </div>
+                <div>
+                    <label for="Ecidif">Estado Civil (Según diccionario):</label>
+                    <input type="number" id="Ecidif" name="Ecidif" value="1" required>
+                </div>
+                <div>
+                    <label for="Escodif">Escolaridad (99=No aplica/ignorado):</label>
+                    <input type="number" id="Escodif" name="Escodif" value="3" required>
+                </div>
+                <div>
+                    <label for="Ocudif">Ocupación (999=No aplica/ignorado):</label>
+                    <input type="number" id="Ocudif" name="Ocudif" value="999" required>
+                </div>
+                <div>
+                    <label for="Pnadif">País de Nacimiento (99=No aplica/ignorado):</label>
+                    <input type="number" id="Pnadif" name="Pnadif" value="84" required>
+                </div>
+                <div>
+                    <label for="Dnadif">Departamento de Nacimiento:</label>
+                    <input type="number" id="Dnadif" name="Dnadif" value="23" required>
+                </div>
+                <div>
+                    <label for="Mnadif">Municipio de Nacimiento:</label>
+                    <input type="number" id="Mnadif" name="Mnadif" value="2300" required>
+                </div>
+                <div>
+                    <label for="Nacdif">Nacionalidad:</label>
+                    <input type="number" id="Nacdif" name="Nacdif" value="84" required>
+                </div>
+                <div>
+                    <label for="Predif">País de Residencia (99=No aplica/ignorado):</label>
+                    <input type="number" id="Predif" name="Predif" value="84" required>
+                </div>
+                <div>
+                    <label for="Dredif">Departamento de Residencia:</label>
+                    <input type="number" id="Dredif" name="Dredif" value="23" required>
+                </div>
+                <div>
+                    <label for="Mredif">Municipio de Residencia:</label>
+                    <input type="number" id="Mredif" name="Mredif" value="2300" required>
+                </div>
+                <div>
+                    <label for="Asist">Asistencia Médica:</label>
+                    <input type="number" id="Asist" name="Asist" value="1" required>
+                </div>
+                <div>
+                    <label for="Ocur">Lugar de Ocurrencia:</label>
+                    <input type="number" id="Ocur" name="Ocur" value="1" required>
+                </div>
+                <div>
+                    <label for="Cerdef">Certificador de Defunción (99=No aplica/ignorado):</label>
+                    <input type="number" id="Cerdef" name="Cerdef" value="1" required>
+                </div>
+                <div>
+                    <label for="Añoocu">Año de Ocurrencia:</label>
+                    <input type="number" id="Añoocu" name="Añoocu" value="2012" required>
+                </div>
+            </div>
+            <div class="loading-spinner" id="loadingSpinner"></div>
             <button type="submit">Predecir Causa de Defunción</button>
         </form>
 
@@ -74,60 +240,106 @@
 
     <script>
         document.getElementById('predictionForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
+            event.preventDefault(); // Prevenir el envío del formulario por defecto
 
             const resultDiv = document.getElementById('result');
             const errorDiv = document.getElementById('error');
-            resultDiv.innerText = 'Cargando...';
-            errorDiv.innerText = '';
+            const loadingSpinner = document.getElementById('loadingSpinner');
 
+            resultDiv.innerText = ''; // Limpiar resultados anteriores
+            errorDiv.innerText = ''; // Limpiar errores anteriores
+            loadingSpinner.style.display = 'block'; // Mostrar spinner de carga
+
+            // Recoger todos los valores del formulario
             const formData = new FormData(event.target);
-            const data = {};
+            const patientData = {};
             for (const [key, value] of formData.entries()) {
-                // Intenta convertir a float. Si no es un número válido (ej. select vacío), lo deja como está
+                // Convertir a número si es posible, de lo contrario mantener como string
                 const parsedValue = parseFloat(value);
-                data[key] = isNaN(parsedValue) ? value : parsedValue;
+                patientData[key] = isNaN(parsedValue) ? value : parsedValue;
             }
 
-            const expectedColumns = [
-                'Depreg', 'Mupreg', 'Depocu', 'Mupocu', 'Areag', 'Sexo', 'Edadif',
-                'Perdif', 'Getdif', 'Ecidif', 'Escodif', 'Ocudif', 'Pnadif', 'Dnadif',
-                'Mnadif', 'Nacdif', 'Predif', 'Dredif', 'Mredif', 'Asist', 'Ocur', 'Cerdef', 'Añoocu'
-            ];
+            // Construir el prompt para el modelo Gemini
+            const prompt = `Dado los siguientes datos de un paciente de Guatemala, predice la causa de defunción más probable entre 'I219' (Infarto agudo del miocardio, sin otra especificacion), 'J189' (Neumonía, no especificada) y 'E149' (Diabetes mellitus no especificada, sin mencion de complicacion). Proporciona el código ICD predicho y la probabilidad para cada una de las tres enfermedades.
+            Datos del paciente:
+            ${JSON.stringify(patientData, null, 2)}`;
 
-            // Este bucle asegura que todas las columnas esperadas estén presentes,
-            // si no están en el formulario, se añaden con 0 o un valor por defecto sensato.
-            // Aunque con `required` en HTML no debería ser necesario para los campos presentes.
-            for (const col of expectedColumns) {
-                if (!(col in data)) {
-                    data[col] = 0; // O un valor predeterminado si es mejor para la imputación de tu modelo
+            // Configuración de la API de Gemini
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+            const payload = {
+                contents: chatHistory,
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "predicted_icd": { "type": "STRING" },
+                            "probabilities": {
+                                "type": "OBJECT",
+                                "properties": {
+                                    "I219": { "type": "NUMBER" },
+                                    "J189": { "type": "NUMBER" },
+                                    "E149": { "type": "NUMBER" }
+                                }
+                            }
+                        },
+                        "required": ["predicted_icd", "probabilities"]
+                    }
                 }
-            }
+            };
+
+            // La API key se proporciona automáticamente en el entorno Canvas si está vacía.
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
-                const response = await fetch('http://127.0.0.1:5000/predict', {
+                const response = await fetch(apiUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    throw new Error(`Error de la API: ${response.status} - ${errorText}`);
                 }
 
                 const result = await response.json();
-                resultDiv.innerHTML = `
-                    <p><strong>Enfermedad Predicha:</strong> ${result.enfermedad_predicha}</p>
-                    <p><strong>Probabilidades:</strong></p>
-                    <pre>${JSON.stringify(result.probabilidades, null, 2)}</pre>
-                `;
+
+                // Verificar la estructura de la respuesta
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+
+                    const jsonResponseText = result.candidates[0].content.parts[0].text;
+                    const parsedJson = JSON.parse(jsonResponseText);
+
+                    // Asegurarse de que las probabilidades sean números y redondear
+                    const formattedProbabilities = {};
+                    for (const key in parsedJson.probabilities) {
+                        if (typeof parsedJson.probabilities[key] === 'number') {
+                            formattedProbabilities[key] = parsedJson.probabilities[key].toFixed(4); // Redondear a 4 decimales
+                        } else {
+                            formattedProbabilities[key] = 'N/A';
+                        }
+                    }
+
+                    resultDiv.innerHTML = `
+                        <p><strong>Enfermedad Predicha:</strong> ${parsedJson.predicted_icd}</p>
+                        <p><strong>Probabilidades:</strong></p>
+                        <pre>${JSON.stringify(formattedProbabilities, null, 2)}</pre>
+                    `;
+                } else {
+                    throw new Error("Estructura de respuesta inesperada del modelo.");
+                }
 
             } catch (e) {
                 errorDiv.innerText = `Error al obtener la predicción: ${e.message}`;
-                resultDiv.innerText = '';
+                console.error("Detalle del error:", e);
+            } finally {
+                loadingSpinner.style.display = 'none'; // Ocultar spinner de carga
             }
         });
     </script>
